@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,7 +17,7 @@ import org.junit.Test;
 public class CreateTableTest {
     @Before
     public void startAnInMemoryServer() throws Exception {
-        final String[] localArgs = {"-inMemory", "-port", "30000"};
+        final String[] localArgs = {"-inMemory", "-port", "30000", "-sharedDb"};
 
         final DynamoDBProxyServer server = ServerRunner.createServerFromCommandLineArgs(localArgs);
         server.start();
@@ -27,18 +28,23 @@ public class CreateTableTest {
     @Test
     public void createTable() throws Exception {
 
-        DynamoDBMapperConfig config = new DynamoDBMapperConfig(DynamoDBMapperConfig.DEFAULT, new DynamoDBMapperConfig(ConversionSchemas.V2));
         AmazonDynamoDBClient dynamoDbClient = new AmazonDynamoDBClient();
+        dynamoDbClient.setEndpoint("http://localhost:30000");
+        DynamoDBMapperConfig config = new DynamoDBMapperConfig(DynamoDBMapperConfig.DEFAULT, new DynamoDBMapperConfig(ConversionSchemas.V2));
         final DynamoDBMapper dynamoDBMapper = new DynamoDBMapper(dynamoDbClient, config);
         CreateTableRequest req = dynamoDBMapper.generateCreateTableRequest(User.class);
+        req.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
 
         DynamoDB dynamoDB = new DynamoDB(dynamoDbClient);
-        Table table = dynamoDB.createTable(req);
-        table.waitForActive();
+
+        Table newTable = dynamoDB.createTable(req);
+        newTable.waitForActive();
 
     }
 
-    @DynamoDBTable(tableName = "USER")
+
+
+    @DynamoDBTable(tableName = "User")
     public class User {
         @DynamoDBHashKey
         private String id;
