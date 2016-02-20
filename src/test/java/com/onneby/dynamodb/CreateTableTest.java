@@ -8,67 +8,56 @@ import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.UUID;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by ponneby on 20/02/16.
  */
 public class CreateTableTest {
+    public static final String ID = "someUniqueId";
+    private static DynamoDBMapper dynamoDBMapper;
+    private static DynamoDB dynamoDB;
+
     @BeforeClass
     public static void startAnInMemoryServer() throws Exception {
         final String[] localArgs = {"-inMemory", "-port", "30000", "-sharedDb"};
 
         final DynamoDBProxyServer server = ServerRunner.createServerFromCommandLineArgs(localArgs);
         server.start();
-
-
-    }
-
-    @Test
-    public void createTable() throws Exception {
-
         AmazonDynamoDBClient dynamoDbClient = new AmazonDynamoDBClient();
         dynamoDbClient.setEndpoint("http://localhost:30000");
         DynamoDBMapperConfig config = new DynamoDBMapperConfig(DynamoDBMapperConfig.DEFAULT, new DynamoDBMapperConfig(ConversionSchemas.V2));
-        final DynamoDBMapper dynamoDBMapper = new DynamoDBMapper(dynamoDbClient, config);
+        dynamoDBMapper = new DynamoDBMapper(dynamoDbClient, config);
+        dynamoDB = new DynamoDB(dynamoDbClient);
+    }
+
+    @Before
+    public void createUserTable() throws Exception {
+
         CreateTableRequest req = dynamoDBMapper.generateCreateTableRequest(User.class);
         req.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
-
-        DynamoDB dynamoDB = new DynamoDB(dynamoDbClient);
 
         Table newTable = dynamoDB.createTable(req);
         newTable.waitForActive();
 
+        saveUser();
+
     }
 
-    @Test
-    public void saveItem() throws Exception {
-        AmazonDynamoDBClient dynamoDbClient = new AmazonDynamoDBClient();
-        dynamoDbClient.setEndpoint("http://localhost:30000");
-        DynamoDBMapperConfig config = new DynamoDBMapperConfig(DynamoDBMapperConfig.DEFAULT, new DynamoDBMapperConfig(ConversionSchemas.V2));
-        final DynamoDBMapper dynamoDBMapper = new DynamoDBMapper(dynamoDbClient, config);
-        CreateTableRequest req = dynamoDBMapper.generateCreateTableRequest(User.class);
-        req.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
-
+    private void saveUser() throws Exception {
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
+        user.setId(ID);
         dynamoDBMapper.save(user);
     }
 
-    @DynamoDBTable(tableName = "User")
-    public class User {
-        @DynamoDBHashKey
-        private String id;
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
+    @Test
+    public void loadUser() throws Exception {
+        User user = dynamoDBMapper.load(User.class, ID);
+        assertThat(user.getId()).isEqualTo(ID);
     }
+
 }
