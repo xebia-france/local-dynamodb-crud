@@ -7,9 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import com.amazonaws.services.dynamodbv2.model.*;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -36,10 +34,11 @@ public class CRUDTest {
         DynamoDBMapperConfig config = new DynamoDBMapperConfig(DynamoDBMapperConfig.DEFAULT, new DynamoDBMapperConfig(ConversionSchemas.V2));
         dynamoDBMapper = new DynamoDBMapper(dynamoDbClient, config);
         dynamoDB = new DynamoDB(dynamoDbClient);
+
+        createUserTable();
     }
 
-    @Before
-    public void createUserTable() throws Exception {
+    private static void createUserTable() throws Exception {
 
         CreateTableRequest req = dynamoDBMapper.generateCreateTableRequest(User.class);
         req.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
@@ -51,9 +50,9 @@ public class CRUDTest {
         Table newTable = dynamoDB.createTable(req);
         newTable.waitForActive();
 
-        saveUser();
 
     }
+
 
     private void saveUser() throws Exception {
         User user = new User();
@@ -62,20 +61,24 @@ public class CRUDTest {
         dynamoDBMapper.save(user);
     }
 
-    @Ignore
     @Test
     public void loadUser() throws Exception {
+        saveUser();
+
         User user = dynamoDBMapper.load(User.class, ID);
         assertThat(user.getId()).isEqualTo(ID);
     }
 
     @Test
     public void queryByEmail() throws Exception {
+
+        saveUser();
+
         String emailIndex = "email_index";
         DynamoDBQueryExpression<User> queryExpression = new DynamoDBQueryExpression<User>()
                 .withIndexName(emailIndex)
                 .withConsistentRead(false)
-            .withKeyConditionExpression("email" + " = :email")
+                .withKeyConditionExpression("email" + " = :email")
                 .withExpressionAttributeValues(new HashMap<String, AttributeValue>() {
                     {
                         put(":email", new AttributeValue(EMAIL_ADDRESS));
