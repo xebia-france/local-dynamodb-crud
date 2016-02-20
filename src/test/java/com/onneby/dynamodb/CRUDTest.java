@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class CRUDTest {
     public static final String ID = "someUniqueId";
+    public static final String EMAIL_ADDRESS = "test@example.com";
     private static DynamoDBMapper dynamoDBMapper;
     private static DynamoDB dynamoDB;
 
@@ -51,6 +52,7 @@ public class CRUDTest {
     private void saveUser() throws Exception {
         User user = new User();
         user.setId(ID);
+        user.setEmail(EMAIL_ADDRESS);
         dynamoDBMapper.save(user);
     }
 
