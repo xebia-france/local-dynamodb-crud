@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Created by ponneby on 20/02/16.
  */
-public class CreateTableTest {
+public class CRUDTest {
     public static final String ID = "someUniqueId";
     private static DynamoDBMapper dynamoDBMapper;
     private static DynamoDB dynamoDB;
