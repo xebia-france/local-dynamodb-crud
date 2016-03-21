@@ -1,12 +1,9 @@
-package com.onneby.dynamodb;
+package fr.xebia.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
-/**
- * Created by ponneby on 20/02/16.
- */
 @DynamoDBTable(tableName = "User")
 public class User {
     @DynamoDBHashKey

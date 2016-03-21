@@ -1,4 +1,4 @@
-package com.onneby.dynamodb;
+package fr.xebia.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import com.amazonaws.services.dynamodbv2.model.*;
+import org.assertj.core.api.Assertions;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -85,7 +86,7 @@ public class CRUDTest {
                     }
                 });
         PaginatedQueryList<User> result = dynamoDBMapper.query(User.class, queryExpression);
-        assertThat(result).isNotEmpty();
+        Assertions.assertThat(result).isNotEmpty();
 
     }
 }
