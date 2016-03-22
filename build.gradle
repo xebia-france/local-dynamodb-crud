@@ -40,3 +40,7 @@ task copyRuntimeLibs(type: Copy) {
 
 test.dependsOn copyRuntimeLibs
 
+test {
+    environment 'AWS_ACCESS_KEY_ID', 'test_key'
+    environment 'AWS_SECRET_ACCESS_KEY', 'test_secret'
+}
