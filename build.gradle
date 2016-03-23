@@ -15,11 +15,11 @@ repositories {
 }
 
 dependencies {
-    compile('com.amazonaws:aws-java-sdk:1.10.28')
+    compile('com.amazonaws:aws-java-sdk:1.10.62')
 
-    testCompile('junit:junit:4.11')
-    testCompile('org.assertj:assertj-core:1.7.1')
-    testCompile('com.amazonaws:DynamoDBLocal:1.10.5.1')
+    testCompile('junit:junit:4.12')
+    testCompile('org.assertj:assertj-core:3.3.0')
+    testCompile('com.amazonaws:DynamoDBLocal:1.10.20')
 }
 
 buildscript {
